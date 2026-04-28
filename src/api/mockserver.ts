@@ -74,6 +74,16 @@ export async function clearAll(cfg: ConnectionConfig): Promise<void> {
   }
 }
 
+export async function clearExpectations(cfg: ConnectionConfig): Promise<void> {
+  try {
+    const res = await fetch(`${base(cfg)}/mockserver/clear?type=EXPECTATIONS`, { method: 'PUT' });
+    if (!res.ok) throw new ConnectionError(`HTTP ${res.status}`);
+  } catch (e) {
+    if (e instanceof ConnectionError) throw e;
+    throw new ConnectionError(`Cannot reach MockServer at ${cfg.host}:${cfg.port}`);
+  }
+}
+
 export async function fetchExpectations(cfg: ConnectionConfig): Promise<Expectation[]> {
   try {
     const res = await fetch(`${base(cfg)}/mockserver/retrieve?type=active_expectations`, {

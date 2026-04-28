@@ -1,5 +1,5 @@
 import { Expectation } from '../types';
-import { getExpectationOperation } from '../utils';
+import { getSoapAction } from '../utils';
 import { MethodBadge, StatusBadge } from './ui/Badge';
 
 interface ExpectationListProps {
@@ -9,6 +9,7 @@ interface ExpectationListProps {
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
+  onClear: () => void;
   width: number;
   filterActive: boolean;
   hiddenCount: number;
@@ -21,6 +22,7 @@ export default function ExpectationList({
   loading,
   error,
   onRefresh,
+  onClear,
   width,
   filterActive,
   hiddenCount,
@@ -32,13 +34,16 @@ export default function ExpectationList({
           {expectations.length} expectation{expectations.length !== 1 ? 's' : ''}
         </span>
         <button className="btn" onClick={onRefresh} disabled={loading}>
-          {loading ? '…' : '⟳ Refresh'}
+          {loading ? '\u2026' : '\u27f3 Refresh'}
+        </button>
+        <button className="btn btn-danger" onClick={onClear} disabled={loading}>
+          Clear
         </button>
       </div>
 
       {filterActive && (
         <div className="filter-banner">
-          {expectations.length} shown — {hiddenCount} hidden
+          {expectations.length} shown \u2014 {hiddenCount} hidden
         </div>
       )}
 
@@ -52,7 +57,7 @@ export default function ExpectationList({
         const method = exp.httpRequest.method;
         const path = exp.httpRequest.path ?? '(any path)';
         const status = exp.httpResponse?.statusCode;
-        const operation = getExpectationOperation(exp.httpRequest);
+        const soapAction = getSoapAction(exp.httpRequest);
         const isSelected = selected === exp;
 
         return (
@@ -70,9 +75,9 @@ export default function ExpectationList({
               <span className="row-path" title={path}>
                 {path}
               </span>
-              {operation && (
-                <span className="row-soap-action" title={operation}>
-                  {operation}
+              {soapAction && (
+                <span className="row-soap-action" title={soapAction}>
+                  {soapAction}
                 </span>
               )}
             </span>

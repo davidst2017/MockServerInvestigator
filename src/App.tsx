@@ -29,6 +29,7 @@ export default function App() {
     loading: expLoading,
     error: expError,
     refresh: refreshExpectations,
+    clear: clearExpectations,
   } = useExpectations(config);
   const [selectedExpectation, setSelectedExpectation] = useState<Expectation | null>(null);
   const { width: panelWidth, onMouseDown: onResizeMouseDown } = usePanelResize();
@@ -117,6 +118,7 @@ export default function App() {
             loading={expLoading}
             error={expError}
             onRefresh={refreshExpectations}
+            onClear={clearExpectations}
             width={panelWidth}
             filterActive={filterActive}
             hiddenCount={expectations.length - visibleExpectations.length}

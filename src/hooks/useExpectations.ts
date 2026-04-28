@@ -3,7 +3,7 @@
  * Provides a manual refresh and tracks loading state.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { fetchExpectations } from '../api/mockserver';
+import { clearExpectations, fetchExpectations } from '../api/mockserver';
 import { ConnectionConfig, ConnectionError, Expectation } from '../types';
 
 export function useExpectations(config: ConnectionConfig) {
@@ -24,10 +24,19 @@ export function useExpectations(config: ConnectionConfig) {
     }
   }, [config]);
 
+  const clear = useCallback(async () => {
+    try {
+      await clearExpectations(config);
+      setExpectations([]);
+    } catch (e) {
+      setError(e instanceof ConnectionError ? e.message : 'Failed to clear expectations');
+    }
+  }, [config]);
+
   // Fetch on mount and whenever config changes
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { expectations, loading, error, refresh };
+  return { expectations, loading, error, refresh, clear };
 }
