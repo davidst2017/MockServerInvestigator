@@ -31,7 +31,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: rockndevel/mockserverinvestigator
+          images: davidst2017/mockserverinvestigator
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest
