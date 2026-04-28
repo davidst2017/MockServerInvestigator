@@ -16,10 +16,43 @@ export function prettyBody(body?: MockServerBody): string {
  * Extracts the SOAP action from a request's SOAPAction header.
  * The header value is typically wrapped in extra quotes, e.g. '"/my/action"' — those are stripped.
  */
-export function getSoapAction(request: MockServerRequest): string | null {
+export function getSoapAction(request: { headers?: Record<string, string[]> }): string | null {
   const value = request.headers?.['SOAPAction']?.[0];
   if (!value) return null;
   return value.replace(/^"+|"+$/g, '');
+}
+
+/**
+ * Extracts a human-readable operation label for an expectation.
+ *
+ * For SOAP expectations the SOAPAction is typically a regex like
+ * ".* /PartyProfile//getParty/.*" — we pull out the last meaningful path
+ * segment as the operation name.
+ *
+ * Falls back to the XPath body matcher (truncated) if no SOAPAction is set.
+ */
+export function getExpectationOperation(request: {
+  headers?: Record<string, string[]>;
+  body?: MockServerBody;
+}): string | null {
+  const raw = request.headers?.['SOAPAction']?.[0];
+  if (raw) {
+    // Strip surrounding quotes
+    const stripped = raw.replace(/^"+|"+$/g, '');
+    // Remove regex anchors/wildcards and split on /
+    const clean = stripped.replace(/\.\*/g, '').replace(/^\/+|\/+$/g, '');
+    const parts = clean.split('/').filter((p) => p.length > 0);
+    // The operation is typically the last non-version segment
+    const op = [...parts].reverse().find((p) => !/^\d+(\.\d+)*$/.test(p));
+    if (op) return op;
+    return clean || stripped;
+  }
+  const b = request.body as Record<string, unknown> | undefined;
+  if (b?.['xpath'] && typeof b['xpath'] === 'string' && b['xpath'] !== '.') {
+    const xpath = b['xpath'] as string;
+    return xpath.length > 40 ? xpath.slice(0, 40) + '…' : xpath;
+  }
+  return null;
 }
 
 /**

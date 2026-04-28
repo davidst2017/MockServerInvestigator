@@ -7,6 +7,8 @@ interface RequestListProps {
   selectedEntry: RequestResponseEntry | null;
   onSelect: (entry: RequestResponseEntry) => void;
   width: number;
+  filterActive: boolean;
+  hiddenCount: number;
 }
 
 function formatTime(ts: string): string {
@@ -22,17 +24,30 @@ function formatTime(ts: string): string {
   }
 }
 
-export default function RequestList({ entries, selectedEntry, onSelect, width }: RequestListProps) {
+export default function RequestList({
+  entries,
+  selectedEntry,
+  onSelect,
+  width,
+  filterActive,
+  hiddenCount,
+}: RequestListProps) {
   if (entries.length === 0) {
     return (
       <div className="request-list" style={{ width }}>
-        <div className="empty-state">No requests recorded.</div>
+        {filterActive && <div className="filter-banner">Filter active — {hiddenCount} hidden</div>}
+        <div className="empty-state">No matching requests.</div>
       </div>
     );
   }
 
   return (
     <div className="request-list" style={{ width }}>
+      {filterActive && (
+        <div className="filter-banner">
+          {entries.length} shown — {hiddenCount} hidden
+        </div>
+      )}
       {entries.map((entry, i) => {
         const method = entry.httpRequest.method ?? '';
         const status = entry.httpResponse?.statusCode;

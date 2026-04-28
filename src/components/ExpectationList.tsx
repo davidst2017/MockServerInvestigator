@@ -1,4 +1,5 @@
 import { Expectation } from '../types';
+import { getExpectationOperation } from '../utils';
 import { MethodBadge, StatusBadge } from './ui/Badge';
 
 interface ExpectationListProps {
@@ -9,6 +10,8 @@ interface ExpectationListProps {
   error: string | null;
   onRefresh: () => void;
   width: number;
+  filterActive: boolean;
+  hiddenCount: number;
 }
 
 export default function ExpectationList({
@@ -19,6 +22,8 @@ export default function ExpectationList({
   error,
   onRefresh,
   width,
+  filterActive,
+  hiddenCount,
 }: ExpectationListProps) {
   return (
     <div className="request-list" style={{ width }}>
@@ -31,6 +36,12 @@ export default function ExpectationList({
         </button>
       </div>
 
+      {filterActive && (
+        <div className="filter-banner">
+          {expectations.length} shown — {hiddenCount} hidden
+        </div>
+      )}
+
       {error && <div className="expectation-error">{error}</div>}
 
       {!error && expectations.length === 0 && !loading && (
@@ -41,6 +52,7 @@ export default function ExpectationList({
         const method = exp.httpRequest.method;
         const path = exp.httpRequest.path ?? '(any path)';
         const status = exp.httpResponse?.statusCode;
+        const operation = getExpectationOperation(exp.httpRequest);
         const isSelected = selected === exp;
 
         return (
@@ -54,8 +66,15 @@ export default function ExpectationList({
             ) : (
               <span className="badge badge-any">ANY</span>
             )}
-            <span className="row-path" title={path}>
-              {path}
+            <span className="row-path-group">
+              <span className="row-path" title={path}>
+                {path}
+              </span>
+              {operation && (
+                <span className="row-soap-action" title={operation}>
+                  {operation}
+                </span>
+              )}
             </span>
             {status != null && <StatusBadge statusCode={status} />}
           </div>

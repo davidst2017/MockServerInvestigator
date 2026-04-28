@@ -148,7 +148,16 @@ body {
   border-color: var(--unmatched);
   color: var(--unmatched);
 }
-
+/* ── Filter banner ────────────────────────────────────────── */
+.filter-banner {
+  background: #1a1500;
+  border-bottom: 1px solid var(--warn);
+  color: var(--warn);
+  font-size: 11px;
+  padding: 4px 10px;
+  text-align: center;
+  flex-shrink: 0;
+}
 /* ── Resize handle ───────────────────────────────────────── */
 .resize-handle {
   width: 4px;

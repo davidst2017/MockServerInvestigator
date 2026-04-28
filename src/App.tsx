@@ -49,6 +49,16 @@ export default function App() {
     return soapAction?.toLowerCase().includes(term) ?? false;
   });
 
+  const visibleExpectations = expectations.filter((exp) => {
+    const term = pathFilter.toLowerCase();
+    if (!term) return true;
+    if ((exp.httpRequest.path ?? '').toLowerCase().includes(term)) return true;
+    const soapAction = getSoapAction(exp.httpRequest);
+    return soapAction?.toLowerCase().includes(term) ?? false;
+  });
+
+  const filterActive = pathFilter.trim().length > 0;
+
   return (
     <div className="app">
       <Header
@@ -90,6 +100,8 @@ export default function App() {
             selectedEntry={selectedEntry}
             onSelect={setSelectedEntry}
             width={panelWidth}
+            filterActive={filterActive}
+            hiddenCount={allEntries.length - visibleEntries.length}
           />
           <ResizeHandle onMouseDown={onResizeMouseDown} />
           <RequestDetail entry={selectedEntry} logs={logs} bestMatch={bestMatch} />
@@ -99,13 +111,15 @@ export default function App() {
       {view === 'expectations' && (
         <div className="content">
           <ExpectationList
-            expectations={expectations}
+            expectations={visibleExpectations}
             selected={selectedExpectation}
             onSelect={setSelectedExpectation}
             loading={expLoading}
             error={expError}
             onRefresh={refreshExpectations}
             width={panelWidth}
+            filterActive={filterActive}
+            hiddenCount={expectations.length - visibleExpectations.length}
           />
           <ResizeHandle onMouseDown={onResizeMouseDown} />
           <ExpectationDetail expectation={selectedExpectation} />
