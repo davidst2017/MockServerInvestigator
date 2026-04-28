@@ -56,10 +56,29 @@ Open [http://localhost:5173](http://localhost:5173) and point the **Host** / **P
 
 ```bash
 docker build -t mockserverinvestigator .
-docker run -p 5173:80 mockserverinvestigator
+docker run -p 5173:8080 mockserverinvestigator
 ```
 
-Open [http://localhost:5173](http://localhost:5173). The container runs nginx on port 80 — the `-p 5173:80` flag maps it to 5173 on your host.
+Open [http://localhost:5173](http://localhost:5173). The container runs nginx on unprivileged port 8080 as a non-root user — the `-p 5173:8080` flag maps it to 5173 on your host.
+
+#### Supply chain attestation
+
+To generate SBOM and provenance attestations (requires Docker BuildKit):
+
+```bash
+docker buildx build --provenance=true --sbom=true -t mockserverinvestigator .
+```
+
+## Releasing a new version
+
+Releases are driven by git tags. The GitHub Actions workflow builds and pushes two Docker Hub tags (`x.y.z` and `latest`) whenever a `v*` tag is pushed.
+
+```bash
+npm version minor        # bumps package.json, commits, and creates the tag (e.g. v1.1.0)
+git push --follow-tags   # pushes the commit and the tag — triggers the CI build
+```
+
+Use `npm version patch` for bug fixes and `npm version major` for breaking changes.
 
 ## Tech stack
 
