@@ -100,6 +100,7 @@ export default function App() {
             entries={visibleEntries}
             selectedEntry={selectedEntry}
             onSelect={setSelectedEntry}
+            onClear={handleClearAll}
             width={panelWidth}
             filterActive={filterActive}
             hiddenCount={allEntries.length - visibleEntries.length}
@@ -124,7 +125,11 @@ export default function App() {
             hiddenCount={expectations.length - visibleExpectations.length}
           />
           <ResizeHandle onMouseDown={onResizeMouseDown} />
-          <ExpectationDetail expectation={selectedExpectation} />
+          <ExpectationDetail
+            expectation={selectedExpectation}
+            config={config}
+            onSaved={refreshExpectations}
+          />
         </div>
       )}
     </div>
