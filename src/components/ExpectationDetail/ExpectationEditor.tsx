@@ -24,17 +24,13 @@ export function ExpectationEditor({
       <div className="expectation-editor-toolbar">
         <span className="expectation-editor-title">Edit Expectation</span>
         <div className="expectation-editor-actions">
-          {saveState === 'saved' && (
-            <span className="editor-status editor-status-ok">✓ Saved</span>
-          )}
+          {saveState === 'saved' && <span className="editor-status editor-status-ok">✓ Saved</span>}
           {saveState === 'error' && saveError && (
             <span className="editor-status editor-status-err" title={saveError}>
               ✕ {saveError}
             </span>
           )}
-          {parseError && (
-            <span className="editor-status editor-status-err">{parseError}</span>
-          )}
+          {parseError && <span className="editor-status editor-status-err">{parseError}</span>}
           <button className="btn" onClick={onCancel}>
             Cancel
           </button>

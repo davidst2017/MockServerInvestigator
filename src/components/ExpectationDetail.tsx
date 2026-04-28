@@ -13,7 +13,11 @@ interface ExpectationDetailProps {
   onSaved: () => void;
 }
 
-export default function ExpectationDetail({ expectation, config, onSaved }: ExpectationDetailProps) {
+export default function ExpectationDetail({
+  expectation,
+  config,
+  onSaved,
+}: ExpectationDetailProps) {
   const [editing, setEditing] = useState(false);
   const editor = useExpectationEditor(config, () => {
     onSaved();
@@ -66,4 +70,3 @@ export default function ExpectationDetail({ expectation, config, onSaved }: Expe
     </div>
   );
 }
-
