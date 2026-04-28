@@ -25,7 +25,9 @@ export function useExpectations(config: ConnectionConfig) {
   }, [config]);
 
   // Fetch on mount and whenever config changes
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return { expectations, loading, error, refresh };
 }

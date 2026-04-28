@@ -5,9 +5,7 @@ interface TimesSectionProps {
 }
 
 export function TimesSection({ times }: TimesSectionProps) {
-  const label = times.unlimited
-    ? 'Unlimited'
-    : `${times.remainingTimes ?? 0} remaining`;
+  const label = times.unlimited ? 'Unlimited' : `${times.remainingTimes ?? 0} remaining`;
 
   return (
     <section className="detail-section">

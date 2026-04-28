@@ -14,9 +14,11 @@ function MismatchRow({ condition }: { condition: MatchedCondition }) {
   return (
     <div className="matched-condition-row">
       <span className="matched-condition-label">{condition.label}</span>
-      {condition.isCode
-        ? <pre className="mismatch-condition-snippet">{condition.value}</pre>
-        : <span className="mismatch-condition-value">{condition.value}</span>}
+      {condition.isCode ? (
+        <pre className="mismatch-condition-snippet">{condition.value}</pre>
+      ) : (
+        <span className="mismatch-condition-value">{condition.value}</span>
+      )}
     </div>
   );
 }

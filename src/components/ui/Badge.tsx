@@ -12,9 +12,7 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ statusCode }: StatusBadgeProps) {
   return (
-    <span className={`status-code status-${Math.floor(statusCode / 100)}xx`}>
-      {statusCode}
-    </span>
+    <span className={`status-code status-${Math.floor(statusCode / 100)}xx`}>{statusCode}</span>
   );
 }
 

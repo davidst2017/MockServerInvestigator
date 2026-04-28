@@ -1,7 +1,8 @@
 import { LogEntry } from '../../types';
 
 function logCardClass(message: string): string {
-  if (/no.match|not.matched|EXPECTATION_NOT_MATCHED/i.test(message)) return 'log-card log-card-fail';
+  if (/no.match|not.matched|EXPECTATION_NOT_MATCHED/i.test(message))
+    return 'log-card log-card-fail';
   if (/expectation.matched|EXPECTATION_MATCHED/i.test(message)) return 'log-card log-card-ok';
   return 'log-card log-card-neutral';
 }

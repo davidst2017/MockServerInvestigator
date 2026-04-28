@@ -12,7 +12,11 @@ interface RequestListProps {
 function formatTime(ts: string): string {
   try {
     const d = new Date(ts);
-    return d.toLocaleTimeString('en-GB', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    return (
+      d.toLocaleTimeString('en-GB', { hour12: false }) +
+      '.' +
+      String(d.getMilliseconds()).padStart(3, '0')
+    );
   } catch {
     return ts;
   }
@@ -49,8 +53,14 @@ export default function RequestList({ entries, selectedEntry, onSelect, width }:
             <span className="row-time">{formatTime(entry.timestamp)}</span>
             <MethodBadge method={method} />
             <span className="row-path-group">
-              <span className="row-path" title={entry.httpRequest.path}>{entry.httpRequest.path}</span>
-              {soapAction && <span className="row-soap-action" title={soapAction}>{soapAction}</span>}
+              <span className="row-path" title={entry.httpRequest.path}>
+                {entry.httpRequest.path}
+              </span>
+              {soapAction && (
+                <span className="row-soap-action" title={soapAction}>
+                  {soapAction}
+                </span>
+              )}
             </span>
             <span className="row-status">{status ?? '—'}</span>
             <MatchBadge matched={matched} />

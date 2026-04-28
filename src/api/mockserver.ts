@@ -9,7 +9,9 @@ import {
 
 const base = (cfg: ConnectionConfig) => `http://${cfg.host}:${cfg.port}`;
 
-export async function fetchRequestResponses(cfg: ConnectionConfig): Promise<RequestResponseEntry[]> {
+export async function fetchRequestResponses(
+  cfg: ConnectionConfig,
+): Promise<RequestResponseEntry[]> {
   try {
     const res = await fetch(`${base(cfg)}/mockserver/retrieve?type=request_responses`, {
       method: 'PUT',
@@ -83,7 +85,10 @@ export async function fetchExpectations(cfg: ConnectionConfig): Promise<Expectat
     const text = await res.text();
     console.log('[fetchExpectations] raw (first 300 chars):', text.slice(0, 300));
     const data = JSON.parse(text);
-    console.log('[fetchExpectations] parsed count:', Array.isArray(data) ? data.length : typeof data);
+    console.log(
+      '[fetchExpectations] parsed count:',
+      Array.isArray(data) ? data.length : typeof data,
+    );
     return Array.isArray(data) ? data : [];
   } catch (e) {
     console.error('[fetchExpectations] error:', e);

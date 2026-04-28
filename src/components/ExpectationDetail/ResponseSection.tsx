@@ -15,13 +15,20 @@ export function ResponseSection({ response }: ResponseSectionProps) {
     <section className="detail-section">
       <h3 className="detail-heading">
         Response
-        {response.statusCode != null && <> <StatusBadge statusCode={response.statusCode} /></>}
+        {response.statusCode != null && (
+          <>
+            {' '}
+            <StatusBadge statusCode={response.statusCode} />
+          </>
+        )}
       </h3>
 
       {response.delay && (
         <>
           <div className="detail-label">Delay</div>
-          <span className="detail-path">{response.delay.value} {response.delay.timeUnit}</span>
+          <span className="detail-path">
+            {response.delay.value} {response.delay.timeUnit}
+          </span>
         </>
       )}
 

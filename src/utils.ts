@@ -76,7 +76,10 @@ export function scoreExpectation(request: MockServerRequest, expectation: Expect
 /**
  * Returns the expectation that best matches the given request, or null if none score > 0.
  */
-export function findBestMatch(request: MockServerRequest, expectations: Expectation[]): Expectation | null {
+export function findBestMatch(
+  request: MockServerRequest,
+  expectations: Expectation[],
+): Expectation | null {
   if (expectations.length === 0) return null;
   let best: Expectation | null = null;
   let bestScore = 0;
@@ -133,7 +136,9 @@ function bodySnippet(requestText: string, matcherText: string): string {
   if (idx !== -1) {
     const start = Math.max(0, idx - WINDOW);
     const end = Math.min(requestText.length, idx + matcherText.length + WINDOW);
-    return (start > 0 ? '…' : '') + requestText.slice(start, end) + (end < requestText.length ? '…' : '');
+    return (
+      (start > 0 ? '…' : '') + requestText.slice(start, end) + (end < requestText.length ? '…' : '')
+    );
   }
   // No direct substring — show the first 300 chars as context
   return requestText.slice(0, 300) + (requestText.length > 300 ? '…' : '');
@@ -143,12 +148,18 @@ function bodySnippet(requestText: string, matcherText: string): string {
  * Returns the list of conditions from the expectation that DID NOT match the request.
  * Used to explain *why* an unmatched request failed.
  */
-export function getMismatchedConditions(request: MockServerRequest, expectation: Expectation): MatchedCondition[] {
+export function getMismatchedConditions(
+  request: MockServerRequest,
+  expectation: Expectation,
+): MatchedCondition[] {
   const matcher = expectation.httpRequest;
   const conditions: MatchedCondition[] = [];
 
   if (matcher.method && matcher.method !== request.method) {
-    conditions.push({ label: 'Method', value: `expected ${matcher.method}, got ${request.method}` });
+    conditions.push({
+      label: 'Method',
+      value: `expected ${matcher.method}, got ${request.method}`,
+    });
   }
 
   if (matcher.path && matcher.path !== request.path) {
@@ -196,8 +207,10 @@ export function getMismatchedConditions(request: MockServerRequest, expectation:
   return conditions;
 }
 
-
-export function getMatchedConditions(request: MockServerRequest, expectation: Expectation): MatchedCondition[] {
+export function getMatchedConditions(
+  request: MockServerRequest,
+  expectation: Expectation,
+): MatchedCondition[] {
   const matcher = expectation.httpRequest;
   const conditions: MatchedCondition[] = [];
 

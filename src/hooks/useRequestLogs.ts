@@ -9,8 +9,11 @@ import { useEffect, useState } from 'react';
 import { fetchLogs } from '../api/mockserver';
 import { ConnectionConfig, LogEntry, RequestResponseEntry } from '../types';
 
-export function useRequestLogs(config: ConnectionConfig, selectedEntry: RequestResponseEntry | null): LogEntry[] {
-  const [logs, setLogs] = useState<LogEntry[]>([]);  
+export function useRequestLogs(
+  config: ConnectionConfig,
+  selectedEntry: RequestResponseEntry | null,
+): LogEntry[] {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   useEffect(() => {
     console.log('[useRequestLogs] effect triggered', {
       selectedEntry: selectedEntry
@@ -23,7 +26,11 @@ export function useRequestLogs(config: ConnectionConfig, selectedEntry: RequestR
       return;
     }
     const controller = new AbortController();
-    console.log('[useRequestLogs] fetching logs for', selectedEntry.httpRequest.method, selectedEntry.httpRequest.path);
+    console.log(
+      '[useRequestLogs] fetching logs for',
+      selectedEntry.httpRequest.method,
+      selectedEntry.httpRequest.path,
+    );
     fetchLogs(config, {
       method: selectedEntry.httpRequest.method,
       path: selectedEntry.httpRequest.path,

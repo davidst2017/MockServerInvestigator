@@ -71,7 +71,9 @@ export function RequestTab({ entry, bestMatch }: RequestTabProps) {
       )}
 
       {isUnmatched && bestMatch && <BestMatchSection request={req} expectation={bestMatch} />}
-      {!isUnmatched && bestMatch && <MatchedConditionsSection request={req} expectation={bestMatch} />}
+      {!isUnmatched && bestMatch && (
+        <MatchedConditionsSection request={req} expectation={bestMatch} />
+      )}
     </div>
   );
 }

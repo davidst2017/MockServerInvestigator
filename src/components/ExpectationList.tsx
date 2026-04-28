@@ -49,8 +49,14 @@ export default function ExpectationList({
             className={`request-row ${isSelected ? 'selected' : ''}`}
             onClick={() => onSelect(exp)}
           >
-            {method ? <MethodBadge method={method} /> : <span className="badge badge-any">ANY</span>}
-            <span className="row-path" title={path}>{path}</span>
+            {method ? (
+              <MethodBadge method={method} />
+            ) : (
+              <span className="badge badge-any">ANY</span>
+            )}
+            <span className="row-path" title={path}>
+              {path}
+            </span>
             {status != null && <StatusBadge statusCode={status} />}
           </div>
         );

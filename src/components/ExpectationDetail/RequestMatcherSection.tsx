@@ -17,9 +17,11 @@ export function RequestMatcherSection({ request }: RequestMatcherSectionProps) {
 
       <div className="detail-label">Method / Path</div>
       <div className="detail-method-path">
-        {request.method
-          ? <MethodBadge method={request.method} />
-          : <span className="badge badge-any">ANY</span>}
+        {request.method ? (
+          <MethodBadge method={request.method} />
+        ) : (
+          <span className="badge badge-any">ANY</span>
+        )}
         <span className="detail-path">{request.path ?? '(any path)'}</span>
       </div>
 

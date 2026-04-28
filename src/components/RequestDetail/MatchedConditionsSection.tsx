@@ -14,9 +14,11 @@ function ConditionRow({ condition }: { condition: MatchedCondition }) {
   return (
     <div className="matched-condition-row">
       <span className="matched-condition-label">{condition.label}</span>
-      {condition.isCode
-        ? <pre className="matched-condition-snippet">{condition.value}</pre>
-        : <span className="matched-condition-value">{condition.value}</span>}
+      {condition.isCode ? (
+        <pre className="matched-condition-snippet">{condition.value}</pre>
+      ) : (
+        <span className="matched-condition-value">{condition.value}</span>
+      )}
     </div>
   );
 }
@@ -49,4 +51,3 @@ export function MatchedConditionsSection({ request, expectation }: MatchedCondit
     </div>
   );
 }
-

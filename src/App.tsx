@@ -17,13 +17,19 @@ type View = 'requests' | 'expectations';
 
 export default function App() {
   const { config, handleConfigChange } = useConfig();
-  const { allEntries, connected, autoRefresh, toggleAutoRefresh, refresh, handleClear } = useRequestPolling(config);
+  const { allEntries, connected, autoRefresh, toggleAutoRefresh, refresh, handleClear } =
+    useRequestPolling(config);
   const [selectedEntry, setSelectedEntry] = useState<RequestResponseEntry | null>(null);
   const [pathFilter, setPathFilter] = useState('');
   const logs = useRequestLogs(config, selectedEntry);
 
   const [view, setView] = useState<View>('requests');
-  const { expectations, loading: expLoading, error: expError, refresh: refreshExpectations } = useExpectations(config);
+  const {
+    expectations,
+    loading: expLoading,
+    error: expError,
+    refresh: refreshExpectations,
+  } = useExpectations(config);
   const [selectedExpectation, setSelectedExpectation] = useState<Expectation | null>(null);
   const { width: panelWidth, onMouseDown: onResizeMouseDown } = usePanelResize();
 
@@ -67,7 +73,10 @@ export default function App() {
         </button>
         <button
           className={`view-tab ${view === 'expectations' ? 'view-tab-active' : ''}`}
-          onClick={() => { setView('expectations'); refreshExpectations(); }}
+          onClick={() => {
+            setView('expectations');
+            refreshExpectations();
+          }}
         >
           Expectations
           {expectations.length > 0 && <span className="tab-badge">{expectations.length}</span>}
