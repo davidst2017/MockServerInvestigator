@@ -49,7 +49,10 @@ function valuesMatch(actualValues: string[] | undefined, expectedValues: string[
   );
 }
 
-function bodyMatches(requestBody: MockServerBody | undefined, matcherBody: MockServerBody): boolean {
+function bodyMatches(
+  requestBody: MockServerBody | undefined,
+  matcherBody: MockServerBody,
+): boolean {
   const requestText = getRawBodyText(requestBody);
   if (!requestText) return false;
 

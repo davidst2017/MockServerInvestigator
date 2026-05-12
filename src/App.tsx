@@ -35,8 +35,8 @@ export default function App() {
   const { width: panelWidth, onMouseDown: onResizeMouseDown } = usePanelResize();
 
   const bestMatch = selectedEntry
-    ? findMatchedExpectation(selectedEntry.httpRequest, expectations) ??
-      findBestMatch(selectedEntry.httpRequest, expectations)
+    ? (findMatchedExpectation(selectedEntry.httpRequest, expectations) ??
+      findBestMatch(selectedEntry.httpRequest, expectations))
     : null;
 
   function handleClearAll() {
