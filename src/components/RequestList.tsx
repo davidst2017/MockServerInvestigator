@@ -1,9 +1,10 @@
-import { RequestResponseEntry } from '../types';
-import { getSoapAction } from '../utils';
+import { Expectation, RequestResponseEntry } from '../types';
+import { getSoapAction, isLikelyMatched } from '../utils';
 import { MatchBadge, MethodBadge } from './ui/Badge';
 
 interface RequestListProps {
   entries: RequestResponseEntry[];
+  expectations: Expectation[];
   selectedEntry: RequestResponseEntry | null;
   onSelect: (entry: RequestResponseEntry) => void;
   onClear: () => void;
@@ -27,6 +28,7 @@ function formatTime(ts: string): string {
 
 export default function RequestList({
   entries,
+  expectations,
   selectedEntry,
   onSelect,
   onClear,
@@ -67,7 +69,7 @@ export default function RequestList({
       {entries.map((entry, i) => {
         const method = entry.httpRequest.method ?? '';
         const status = entry.httpResponse?.statusCode;
-        const matched = status != null && status !== 404;
+        const matched = isLikelyMatched(entry.httpRequest, entry.httpResponse, expectations);
         const soapAction = getSoapAction(entry.httpRequest);
         const isSelected =
           selectedEntry !== null &&

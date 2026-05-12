@@ -1,15 +1,112 @@
-import { Expectation, MockServerBody, MockServerRequest } from './types';
+import { Expectation, MockServerBody, MockServerRequest, MockServerResponse } from './types';
 
 export function prettyBody(body?: MockServerBody): string {
   if (!body) return '';
-  const raw: unknown = (body as Record<string, unknown>).json ?? body.string ?? '';
-  if (!raw) return '';
-  if (typeof raw !== 'string') return JSON.stringify(raw, null, 2);
-  try {
-    return JSON.stringify(JSON.parse(raw), null, 2);
-  } catch {
-    return raw;
+  const b = body as Record<string, unknown>;
+
+  if (b['json'] !== undefined) {
+    const raw = b['json'];
+    if (typeof raw !== 'string') return JSON.stringify(raw, null, 2);
+    try {
+      return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+      return raw;
+    }
   }
+
+  if (typeof b['string'] === 'string') return b['string'];
+  if (typeof b['xml'] === 'string') return b['xml'];
+  if (typeof b['xpath'] === 'string') return b['xpath'];
+  if (typeof b['jsonPath'] === 'string') return b['jsonPath'];
+  if (typeof b['regex'] === 'string') return b['regex'];
+  if (b['jsonSchema'] !== undefined) {
+    const schema = b['jsonSchema'];
+    return typeof schema === 'string' ? schema : JSON.stringify(schema, null, 2);
+  }
+  if (typeof b['rawBytes'] === 'string') return b['rawBytes'];
+
+  return '';
+}
+
+function looksLikeRegex(pattern: string): boolean {
+  return /[.*+?^${}()|[\]\\]/.test(pattern);
+}
+
+function matchesExpectedValue(actual: string, expected: string): boolean {
+  if (actual === expected) return true;
+  if (!looksLikeRegex(expected)) return false;
+  try {
+    return new RegExp(expected).test(actual);
+  } catch {
+    return false;
+  }
+}
+
+function valuesMatch(actualValues: string[] | undefined, expectedValues: string[]): boolean {
+  if (!actualValues || actualValues.length === 0) return false;
+  return expectedValues.some((expected) =>
+    actualValues.some((actual) => matchesExpectedValue(actual, expected)),
+  );
+}
+
+function bodyMatches(requestBody: MockServerBody | undefined, matcherBody: MockServerBody): boolean {
+  const requestText = getRawBodyText(requestBody);
+  if (!requestText) return false;
+
+  const mb = matcherBody as Record<string, unknown>;
+  if (typeof mb['regex'] === 'string') {
+    try {
+      return new RegExp(mb['regex'] as string).test(requestText);
+    } catch {
+      return false;
+    }
+  }
+
+  const matcherText = getRawBodyText(matcherBody);
+  if (!matcherText) return true;
+  if (requestText.includes(matcherText)) return true;
+
+  // XPath / JSONPath / JSON schema cannot be reliably evaluated client-side.
+  // If one of these is present, avoid false negatives in UI labeling.
+  if (
+    typeof mb['xpath'] === 'string' ||
+    typeof mb['jsonPath'] === 'string' ||
+    mb['jsonSchema'] !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function expectationMatchesRequest(request: MockServerRequest, expectation: Expectation): boolean {
+  const matcher = expectation.httpRequest;
+
+  if (matcher.method && !matchesExpectedValue(request.method, matcher.method)) return false;
+  if (matcher.path && !matchesExpectedValue(request.path, matcher.path)) return false;
+
+  if (matcher.headers) {
+    const reqHeaders = request.headers ?? {};
+    const reqHeadersLower = Object.fromEntries(
+      Object.entries(reqHeaders).map(([k, v]) => [k.toLowerCase(), v]),
+    );
+
+    for (const [key, values] of Object.entries(matcher.headers)) {
+      const reqValues = reqHeadersLower[key.toLowerCase()];
+      if (!valuesMatch(reqValues, values as string[])) return false;
+    }
+  }
+
+  if (matcher.queryStringParameters) {
+    const reqParams = request.queryStringParameters ?? {};
+    for (const [key, values] of Object.entries(matcher.queryStringParameters)) {
+      if (!valuesMatch(reqParams[key], values as string[])) return false;
+    }
+  }
+
+  if (matcher.body && !bodyMatches(request.body, matcher.body)) return false;
+
+  return true;
 }
 
 /**
@@ -126,6 +223,16 @@ export function findBestMatch(
   return best;
 }
 
+export function findMatchedExpectation(
+  request: MockServerRequest,
+  expectations: Expectation[],
+): Expectation | null {
+  for (const exp of expectations) {
+    if (expectationMatchesRequest(request, exp)) return exp;
+  }
+  return null;
+}
+
 export interface MatchedCondition {
   label: string;
   value: string;
@@ -163,18 +270,8 @@ function getRawBodyText(body: MockServerBody | undefined): string {
  * Given a request body text and a matcher snippet, returns a ~300-char window
  * around the first occurrence of the snippet, or the first 300 chars of the body.
  */
-function bodySnippet(requestText: string, matcherText: string): string {
-  const WINDOW = 150;
-  const idx = requestText.indexOf(matcherText);
-  if (idx !== -1) {
-    const start = Math.max(0, idx - WINDOW);
-    const end = Math.min(requestText.length, idx + matcherText.length + WINDOW);
-    return (
-      (start > 0 ? '…' : '') + requestText.slice(start, end) + (end < requestText.length ? '…' : '')
-    );
-  }
-  // No direct substring — show the first 300 chars as context
-  return requestText.slice(0, 300) + (requestText.length > 300 ? '…' : '');
+function bodySnippet(requestText: string): string {
+  return requestText;
 }
 
 /**
@@ -203,7 +300,7 @@ export function getMismatchedConditions(
     const reqHeaders = request.headers ?? {};
     for (const [key, values] of Object.entries(matcher.headers)) {
       const reqValues = reqHeaders[key];
-      const matched = reqValues && (values as string[]).some((v) => reqValues.includes(v));
+      const matched = valuesMatch(reqValues, values as string[]);
       if (!matched) {
         const expected = (values as string[]).join(' | ');
         const got = reqValues ? reqValues.join(', ') : '(missing)';
@@ -216,7 +313,7 @@ export function getMismatchedConditions(
     const reqParams = request.queryStringParameters ?? {};
     for (const [key, values] of Object.entries(matcher.queryStringParameters)) {
       const reqValues = reqParams[key];
-      const matched = reqValues && (values as string[]).some((v) => reqValues.includes(v));
+      const matched = valuesMatch(reqValues, values as string[]);
       if (!matched) {
         const expected = (values as string[]).join(' | ');
         const got = reqValues ? reqValues.join(', ') : '(missing)';
@@ -228,7 +325,12 @@ export function getMismatchedConditions(
   if (matcher.body) {
     const matcherText = getRawBodyText(matcher.body);
     const requestText = getRawBodyText(request.body);
-    if (matcherText && requestText && !requestText.includes(matcherText)) {
+    if (matcherText && !requestText) {
+      conditions.push({
+        label: 'Body',
+        value: `expected body matcher ${matcherText}, got (missing)`,
+      });
+    } else if (!bodyMatches(request.body, matcher.body)) {
       conditions.push({
         label: 'Body',
         value: `Matcher:\n${matcherText}\n\nRequest body (first 300 chars):\n${requestText.slice(0, 300)}${requestText.length > 300 ? '…' : ''}`,
@@ -247,20 +349,31 @@ export function getMatchedConditions(
   const matcher = expectation.httpRequest;
   const conditions: MatchedCondition[] = [];
 
-  if (!matcher.method || matcher.method === request.method) {
-    conditions.push({ label: 'Method', value: matcher.method ?? '(any)' });
+  if (!matcher.method || matchesExpectedValue(request.method, matcher.method)) {
+    conditions.push({
+      label: 'Method',
+      value: matcher.method ? `${matcher.method} (matched ${request.method})` : '(any)',
+    });
   }
 
-  if (!matcher.path || matcher.path === request.path) {
-    conditions.push({ label: 'Path', value: matcher.path ?? '(any)' });
+  if (!matcher.path || matchesExpectedValue(request.path, matcher.path)) {
+    conditions.push({
+      label: 'Path',
+      value: matcher.path ? `${matcher.path} (matched ${request.path})` : '(any)',
+    });
   }
 
   if (matcher.headers) {
     const reqHeaders = request.headers ?? {};
+    const reqHeadersLower = Object.fromEntries(
+      Object.entries(reqHeaders).map(([k, v]) => [k.toLowerCase(), v]),
+    );
     for (const [key, values] of Object.entries(matcher.headers)) {
-      const reqValues = reqHeaders[key];
+      const reqValues = reqHeadersLower[key.toLowerCase()];
       if (!reqValues) continue;
-      const matched = (values as string[]).find((v) => reqValues.includes(v));
+      const matched = (values as string[]).find((expected) =>
+        reqValues.some((actual) => matchesExpectedValue(actual, expected)),
+      );
       if (matched !== undefined) {
         conditions.push({ label: `Header: ${key}`, value: matched });
       }
@@ -272,7 +385,9 @@ export function getMatchedConditions(
     for (const [key, values] of Object.entries(matcher.queryStringParameters)) {
       const reqValues = reqParams[key];
       if (!reqValues) continue;
-      const matched = (values as string[]).find((v) => reqValues.includes(v));
+      const matched = (values as string[]).find((expected) =>
+        reqValues.some((actual) => matchesExpectedValue(actual, expected)),
+      );
       if (matched !== undefined) {
         conditions.push({ label: `Query: ${key}`, value: matched });
       }
@@ -282,14 +397,30 @@ export function getMatchedConditions(
   if (matcher.body) {
     const matcherText = getRawBodyText(matcher.body);
     const requestText = getRawBodyText(request.body);
-    if (matcherText && requestText) {
+    if (bodyMatches(request.body, matcher.body)) {
       conditions.push({
         label: 'Body',
-        value: bodySnippet(requestText, matcherText),
+        value: matcherText
+          ? `Expectation matcher body:\n${matcherText}\n\nRequest body:\n${bodySnippet(requestText)}`
+          : `Request body:\n${bodySnippet(requestText)}`,
         isCode: true,
       });
     }
   }
 
   return conditions;
+}
+
+/**
+ * Prefer expectation-based matching for 404 responses to avoid false
+ * "unmatched" when an expectation intentionally returns 404.
+ */
+export function isLikelyMatched(
+  request: MockServerRequest,
+  response: MockServerResponse | undefined,
+  expectations: Expectation[],
+): boolean {
+  if (findMatchedExpectation(request, expectations)) return true;
+  if (!response) return false;
+  return response.statusCode !== 404;
 }

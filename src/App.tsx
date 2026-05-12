@@ -11,7 +11,7 @@ import { usePanelResize } from './hooks/usePanelResize';
 import { useRequestLogs } from './hooks/useRequestLogs';
 import { useRequestPolling } from './hooks/useRequestPolling';
 import { Expectation, RequestResponseEntry } from './types';
-import { findBestMatch, getSoapAction } from './utils';
+import { findBestMatch, findMatchedExpectation, getSoapAction } from './utils';
 
 type View = 'requests' | 'expectations';
 
@@ -34,7 +34,10 @@ export default function App() {
   const [selectedExpectation, setSelectedExpectation] = useState<Expectation | null>(null);
   const { width: panelWidth, onMouseDown: onResizeMouseDown } = usePanelResize();
 
-  const bestMatch = selectedEntry ? findBestMatch(selectedEntry.httpRequest, expectations) : null;
+  const bestMatch = selectedEntry
+    ? findMatchedExpectation(selectedEntry.httpRequest, expectations) ??
+      findBestMatch(selectedEntry.httpRequest, expectations)
+    : null;
 
   function handleClearAll() {
     handleClear();
@@ -98,6 +101,7 @@ export default function App() {
         <div className="content">
           <RequestList
             entries={visibleEntries}
+            expectations={expectations}
             selectedEntry={selectedEntry}
             onSelect={setSelectedEntry}
             onClear={handleClearAll}

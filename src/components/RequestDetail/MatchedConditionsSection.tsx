@@ -33,16 +33,23 @@ export function MatchedConditionsSection({ request, expectation }: MatchedCondit
         {expectation.id && <span className="best-match-id">{expectation.id}</span>}
       </div>
 
-      {conditions.length > 0 && (
-        <section className="detail-section matched-conditions-section">
-          <div className="detail-label">Matched Conditions</div>
-          <div className="matched-conditions-list">
-            {conditions.map((c) => (
-              <ConditionRow key={c.label} condition={c} />
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="detail-section matched-conditions-section">
+        <div className="detail-label">Matched Conditions</div>
+        <div className="matched-conditions-list">
+          {conditions.length > 0 ? (
+            conditions.map((c) => <ConditionRow key={c.label} condition={c} />)
+          ) : (
+            <div className="matched-condition-row">
+              <span className="matched-condition-label">Why Selected</span>
+              <span className="matched-condition-value">
+                MockServer selected this expectation as a match. This usually means the expectation
+                uses broad matchers (for example ANY method/path or matcher types that are evaluated
+                server-side).
+              </span>
+            </div>
+          )}
+        </div>
+      </section>
 
       <RequestMatcherSection request={expectation.httpRequest} />
       {expectation.httpResponse && <ResponseSection response={expectation.httpResponse} />}

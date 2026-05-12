@@ -5,6 +5,7 @@ import { MethodBadge, StatusBadge } from '../ui/Badge';
 import { BestMatchSection } from './BestMatchSection';
 import { MatchedConditionsSection } from './MatchedConditionsSection';
 import { prettyBody } from './utils';
+import { isLikelyMatched } from '../../utils';
 
 interface RequestTabProps {
   entry: RequestResponseEntry;
@@ -14,7 +15,8 @@ interface RequestTabProps {
 export function RequestTab({ entry, bestMatch }: RequestTabProps) {
   const req = entry.httpRequest;
   const res = entry.httpResponse;
-  const isUnmatched = !res || res.statusCode === 404;
+  const isMatched = isLikelyMatched(req, res, bestMatch ? [bestMatch] : []);
+  const isUnmatched = !isMatched;
   const reqBody = prettyBody(req.body);
   const resBody = res ? prettyBody(res.body) : '';
 

@@ -427,9 +427,10 @@ body {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 12px;
-  overflow-x: auto;
+  overflow: auto;
   padding: 10px 12px;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* ── Best match section ───────────────────────────────────── */
@@ -488,6 +489,7 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   flex: 1;
+  min-width: 0;
   margin: 0;
 }
 
@@ -531,7 +533,8 @@ body {
   gap: 10px;
   font-family: var(--font-mono);
   font-size: 12px;
-  align-items: baseline;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .matched-condition-label {
@@ -557,6 +560,7 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   flex: 1;
+  min-width: 0;
   margin: 0;
 }
 
