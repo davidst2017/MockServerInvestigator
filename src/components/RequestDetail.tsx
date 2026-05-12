@@ -40,7 +40,12 @@ export default function RequestDetail({ entry, logs, bestMatch }: RequestDetailP
       </div>
 
       {activeTab === 'request' && <RequestTab entry={entry} bestMatch={bestMatch} />}
-      {activeTab === 'logs' && <LogsTab logs={logs} />}
+      {activeTab === 'logs' && (
+        <LogsTab
+          key={`${entry.timestamp}-${entry.httpRequest.method}-${entry.httpRequest.path}`}
+          logs={logs}
+        />
+      )}
     </div>
   );
 }
