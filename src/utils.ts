@@ -1,31 +1,97 @@
 import { Expectation, MockServerBody, MockServerRequest, MockServerResponse } from './types';
 
-export function prettyBody(body?: MockServerBody): string {
+function normalizeBodyType(typeValue: unknown): string {
+  if (typeof typeValue !== 'string') return '';
+  return typeValue.toLowerCase().replace(/[^a-z]/g, '');
+}
+
+function stringifyUnknown(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function formatParameters(parameters: unknown): string {
+  if (!parameters || typeof parameters !== 'object') return '';
+  try {
+    return JSON.stringify(parameters, null, 2);
+  } catch {
+    return String(parameters);
+  }
+}
+
+/**
+ * MockServer may include multiple body fields on the same object.
+ * Prefer the field indicated by body.type; otherwise use ordered fallback.
+ */
+function pickBodyText(body: MockServerBody | undefined, preferMatcher: boolean): string {
   if (!body) return '';
   const b = body as Record<string, unknown>;
+  const type = normalizeBodyType(b['type']);
+  const valueText = stringifyUnknown(b['value']);
+  const parametersText = formatParameters(b['parameters']);
 
-  if (b['json'] !== undefined) {
-    const raw = b['json'];
-    if (typeof raw !== 'string') return JSON.stringify(raw, null, 2);
-    try {
-      return JSON.stringify(JSON.parse(raw), null, 2);
-    } catch {
-      return raw;
-    }
-  }
+  const byType: Record<string, string> = {
+    exact: valueText || stringifyUnknown(b['string']),
+    substring: valueText || stringifyUnknown(b['string']),
+    json: stringifyUnknown(b['json']),
+    jsonpathparameter: valueText || stringifyUnknown(b['jsonPath']),
+    jsonschema: stringifyUnknown(b['jsonSchema']),
+    jsonpath: valueText || stringifyUnknown(b['jsonPath']),
+    xpath: valueText || stringifyUnknown(b['xpath']),
+    regex: valueText || stringifyUnknown(b['regex']),
+    xml: stringifyUnknown(b['xml']),
+    string: valueText || stringifyUnknown(b['string']),
+    parameter: parametersText,
+    parameters: parametersText,
+    binary: stringifyUnknown(b['rawBytes']),
+    rawbytes: stringifyUnknown(b['rawBytes']),
+  };
 
-  if (typeof b['string'] === 'string') return b['string'];
-  if (typeof b['xml'] === 'string') return b['xml'];
-  if (typeof b['xpath'] === 'string') return b['xpath'];
-  if (typeof b['jsonPath'] === 'string') return b['jsonPath'];
-  if (typeof b['regex'] === 'string') return b['regex'];
-  if (b['jsonSchema'] !== undefined) {
-    const schema = b['jsonSchema'];
-    return typeof schema === 'string' ? schema : JSON.stringify(schema, null, 2);
+  if (type && byType[type]) return byType[type];
+
+  if (valueText && type) return valueText;
+
+  const fallbackOrder = preferMatcher
+    ? [
+        'regex',
+        'xpath',
+        'jsonpath',
+        'jsonschema',
+        'parameter',
+        'substring',
+        'exact',
+        'json',
+        'xml',
+        'string',
+        'rawbytes',
+      ]
+    : ['json', 'xml', 'string', 'rawbytes', 'xpath', 'jsonpath', 'regex', 'jsonschema'];
+
+  for (const key of fallbackOrder) {
+    if (byType[key]) return byType[key];
   }
-  if (typeof b['rawBytes'] === 'string') return b['rawBytes'];
 
   return '';
+}
+
+export function prettyBody(body?: MockServerBody): string {
+  const raw = pickBodyText(body, false);
+  if (!raw) return '';
+
+  const type = normalizeBodyType((body as Record<string, unknown>)['type']);
+  const shouldPrettyJson = type === 'json' || (!type && raw.trim().startsWith('{'));
+  if (!shouldPrettyJson) return raw;
+
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
 }
 
 function looksLikeRegex(pattern: string): boolean {
@@ -248,25 +314,7 @@ export interface MatchedCondition {
  * and expectation matchers (xpath, jsonPath, regex, jsonSchema, string).
  */
 function getRawBodyText(body: MockServerBody | undefined): string {
-  if (!body) return '';
-  const b = body as Record<string, unknown>;
-  // Recorded XML body
-  if (typeof b['xml'] === 'string') return b['xml'];
-  // JSON body — can be a string or an object on recorded requests
-  if (b['json'] !== undefined) {
-    const j = b['json'];
-    return typeof j === 'string' ? j : JSON.stringify(j, null, 2);
-  }
-  // Expectation matchers
-  if (typeof b['xpath'] === 'string') return b['xpath'];
-  if (typeof b['jsonPath'] === 'string') return b['jsonPath'];
-  if (typeof b['regex'] === 'string') return b['regex'];
-  if (b['jsonSchema'] !== undefined) {
-    const s = b['jsonSchema'];
-    return typeof s === 'string' ? s : JSON.stringify(s, null, 2);
-  }
-  if (typeof b['string'] === 'string') return b['string'];
-  return '';
+  return pickBodyText(body, true);
 }
 
 /**

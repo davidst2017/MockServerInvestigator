@@ -6,6 +6,8 @@ export interface ConnectionConfig {
 export interface MockServerBody {
   type?: string;
   contentType?: string;
+  value?: string | Record<string, unknown>;
+  parameters?: Record<string, string[]>;
   // recorded request bodies
   string?: string;
   json?: string | Record<string, unknown>;
